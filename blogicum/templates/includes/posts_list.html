@@ -1,0 +1,6 @@
+{% load static %}
+
+{% for post in posts %}
+  <hr>
+  {% include "includes/_post.html" with post=post full_text=False %}
+{% endfor %}
