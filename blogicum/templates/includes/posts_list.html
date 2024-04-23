@@ -1,6 +1,9 @@
 {% load static %}
 
 {% for post in posts %}
+  <h2>{{ post.title }}</h2>
+  <p>Category: {{ post.category.title }}</p>
+  <p>Location: {{ post.location.name }}</p>
   <hr>
   {% include "includes/_post.html" with post=post full_text=False %}
 {% endfor %}
