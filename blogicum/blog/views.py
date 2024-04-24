@@ -1,18 +1,19 @@
-from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
 from .models import Category, Post
 
-BASE_POST_FILTER = Q(is_published=True) & Q(category__is_published=True)
+PUBLISHED_POSTS = Post.objects.filter(
+    is_published=True,
+    category__is_published=True,
+    pub_date__lte=timezone.now()
+).select_related('category', 'location')
+
 LATEST_POST_COUNT = 5
 
 
 def index(request):
-    post_list = Post.objects.filter(
-        BASE_POST_FILTER,
-        pub_date__lte=timezone.now(),
-    ).select_related('category', 'location')[:LATEST_POST_COUNT]
+    post_list = PUBLISHED_POSTS[:LATEST_POST_COUNT]
     context = {
         'post_list': post_list,
     }
@@ -20,11 +21,7 @@ def index(request):
 
 
 def post_detail(request, pk):
-    post = get_object_or_404(
-        Post.objects.filter(BASE_POST_FILTER),
-        pk=pk,
-        pub_date__lte=timezone.now(),
-    )
+    post = get_object_or_404(PUBLISHED_POSTS, pk=pk)
     context = {
         'post': post,
     }
@@ -34,11 +31,7 @@ def post_detail(request, pk):
 def category_posts(request, category_slug):
     category = get_object_or_404(Category, slug=category_slug,
                                  is_published=True)
-    post_list = Post.objects.filter(
-        BASE_POST_FILTER,
-        category=category,
-        pub_date__lte=timezone.now(),
-    ).select_related('category', 'location')
+    post_list = PUBLISHED_POSTS.filter(category=category)
     context = {
         'category': category,
         'post_list': post_list,

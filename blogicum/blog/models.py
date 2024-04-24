@@ -7,13 +7,13 @@ MAX_LENGTH = 256
 
 class Model(models.Model):
     is_published = models.BooleanField(
+        'Опубликовано',
         default=True,
-        verbose_name='Опубликовано',
         help_text='Снимите галочку, чтобы скрыть публикацию.'
     )
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Добавлено'
+        'Добавлено',
+        auto_now_add=True
     )
 
     class Meta:
@@ -81,7 +81,7 @@ class Post(Model):
     class Meta:
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
-        ordering = ['-pub_date', 'title']
+        ordering = ('-pub_date', 'title')
 
     def __str__(self):
         return self.title
