@@ -5,31 +5,48 @@ from .models import Post, Category
 
 
 def index(request):
-    """Главная страница / Лента записей"""
-    posts = Post.objects.filter(
-        pub_date__lte=timezone.now(),
+    post_list = Post.objects.filter(
         is_published=True,
+        pub_date__lte=timezone.now(),
         category__is_published=True
-    ).select_related('category').order_by('-pub_date')[:5]
-    return render(request, 'blog/index.html', {'posts': posts})
+    ).select_related('category', 'location').order_by('-pub_date')[:5]
+    context = {
+        'post_list': post_list,
+    }
+    return render(request, 'blog/index.html', context)
 
 
-def post_detail(request, id: int):
-    """Отображение полного описания выбранной записи"""
-    post = get_object_or_404(Post, id=id, is_published=True)
-    if post.category is not None and not post.category.is_published:
+def post_detail(request, pk):
+    post = get_object_or_404(
+        Post,
+        pk=pk,
+        is_published=True,
+        pub_date__lte=timezone.now()
+    )
+    if post.category and not post.category.is_published:
         raise Http404("Post is not available")
-    return render(request, 'blog/detail.html', {'post': post})
+    context = {
+        'post': post,
+        'title': post.title,
+        'text': post.text,
+        'pub_date': post.pub_date,
+        'author': post.author,
+        'category': post.category,
+        'location': post.location,
+    }
+    return render(request, 'blog/detail.html', context)
 
 
-def category_posts(request, category_slug: str):
-    """Отображение публикаций категории"""
+def category_posts(request, category_slug):
     category = get_object_or_404(Category, slug=category_slug,
                                  is_published=True)
-    posts = Post.objects.filter(
+    post_list = Post.objects.filter(
         category=category,
         is_published=True,
-        pub_date__lte=timezone.now(),
-    ).select_related('category').order_by('-pub_date')
-    return render(request, 'blog/category.html', {'category': category,
-                                                  'posts': posts})
+        pub_date__lte=timezone.now()
+    ).select_related('category', 'location').order_by('-pub_date')
+    context = {
+        'category': category,
+        'post_list': post_list,
+    }
+    return render(request, 'blog/category.html', context)
