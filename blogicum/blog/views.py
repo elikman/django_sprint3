@@ -24,10 +24,12 @@ def post_detail(request, id: int):
 
 def category_posts(request, category_slug: str):
     """Отображение публикаций категории"""
-    category = get_object_or_404(Category, slug=category_slug, is_published=True)
+    category = get_object_or_404(Category, slug=category_slug,
+                                 is_published=True)
     posts = Post.objects.filter(
         category=category,
         is_published=True,
         pub_date__lte=timezone.now(),
     ).select_related('category').order_by('-pub_date')
-    return render(request, 'blog/category.html', {'category': category, 'posts': posts})
+    return render(request, 'blog/category.html', {'category': category,
+                                                  'posts': posts})
