@@ -1,15 +1,19 @@
-from django.shortcuts import render, get_object_or_404
-from django.utils import timezone
+from django.db.models import Q
 from django.http import Http404
-from .models import Post, Category
+from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
+
+from .models import Category, Post
+
+BASE_POST_FILTER = Q(is_published=True) & Q(category__is_published=True)
+LATEST_POST_COUNT = 5
 
 
 def index(request):
     post_list = Post.objects.filter(
-        is_published=True,
+        BASE_POST_FILTER,
         pub_date__lte=timezone.now(),
-        category__is_published=True
-    ).select_related('category', 'location').order_by('-pub_date')[:5]
+    ).select_related('category', 'location')[:LATEST_POST_COUNT]
     context = {
         'post_list': post_list,
     }
@@ -18,21 +22,12 @@ def index(request):
 
 def post_detail(request, pk):
     post = get_object_or_404(
-        Post,
+        Post.objects.filter(BASE_POST_FILTER),
         pk=pk,
-        is_published=True,
-        pub_date__lte=timezone.now()
+        pub_date__lte=timezone.now(),
     )
-    if post.category and not post.category.is_published:
-        raise Http404("Post is not available")
     context = {
         'post': post,
-        'title': post.title,
-        'text': post.text,
-        'pub_date': post.pub_date,
-        'author': post.author,
-        'category': post.category,
-        'location': post.location,
     }
     return render(request, 'blog/detail.html', context)
 
@@ -41,10 +36,10 @@ def category_posts(request, category_slug):
     category = get_object_or_404(Category, slug=category_slug,
                                  is_published=True)
     post_list = Post.objects.filter(
+        BASE_POST_FILTER,
         category=category,
-        is_published=True,
-        pub_date__lte=timezone.now()
-    ).select_related('category', 'location').order_by('-pub_date')
+        pub_date__lte=timezone.now(),
+    ).select_related('category', 'location')
     context = {
         'category': category,
         'post_list': post_list,
