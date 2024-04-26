@@ -1,13 +1,12 @@
-from django.db.models import Q
+from django.db.models.functions import Now
 from django.shortcuts import get_object_or_404, render
-from django.utils import timezone
 
 from .models import Category, Post
 
 PUBLISHED_POSTS = Post.objects.filter(
-    Q(is_published=True),
-    Q(category__is_published=True),
-    Q(pub_date__lte=timezone.now())
+    is_published=True,
+    category__is_published=True,
+    pub_date__lte=Now()
 ).select_related('category', 'location')
 
 LATEST_POST_COUNT = 5
